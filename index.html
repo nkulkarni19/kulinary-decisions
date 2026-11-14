@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kulinary Decisions</title>
+<meta name="theme-color" content="#ff5a36">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kulinary">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff8ef; --ink: #2a1a12; --muted: #8a7466; --line: #ecdccb;
+    --hot: #ff5a36; --hot2: #ff8a3d; --yes: #18a46b; --no: #e2453c; --card: #ffffff;
+    --r: 22px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "DM Sans", system-ui, sans-serif; }
+  body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); overscroll-behavior: none; }
+  .wrap { max-width: 460px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; padding: 14px 18px 20px; }
+  button, a, .chip, .card { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  #session { height: calc(100dvh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 0; }
+  #swipeView { min-height: 0; }
+  #resView { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; }
+  h1, h2, .brand { font-family: "Fraunces", Georgia, serif; letter-spacing: -0.02em; margin: 0; }
+  .brand { font-size: 22px; font-weight: 900; color: var(--hot); display: flex; align-items: center; gap: 8px; }
+  .brand img { width: 30px; height: 30px; }
+  .hero { margin: 36px 0 24px; }
+  .hero h1 { font-size: 44px; line-height: 1; font-weight: 900; }
+  .hero h1 em { font-style: normal; color: var(--hot); }
+  .hero p { color: var(--muted); font-size: 17px; margin: 12px 0 0; }
+  label.f { display: block; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 8px; }
+  input[type=text], input[type=password] {
+    width: 100%; font: inherit; font-size: 17px; padding: 14px 16px; border-radius: 14px;
+    border: 2px solid var(--line); background: #fff; color: var(--ink); outline: none;
+  }
+  input:focus { border-color: var(--hot); }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    font: inherit; font-weight: 700; font-size: 17px; padding: 16px; border-radius: 16px; border: 0;
+    background: linear-gradient(135deg, var(--hot), var(--hot2)); color: #fff; cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(255, 90, 54, .7); margin-top: 14px;
+  }
+  .btn.ghost { background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: none; }
+  .btn:disabled { opacity: .5; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .or { text-align: center; color: var(--muted); margin: 18px 0 4px; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font: inherit; font-size: 15px; padding: 9px 14px; border-radius: 999px; border: 2px solid var(--line);
+    background: #fff; color: var(--ink); cursor: pointer;
+  }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .seg { display: flex; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 3px; }
+  .seg button { flex: 1; font: inherit; font-size: 14px; font-weight: 700; padding: 10px 4px; border: 0; border-radius: 11px; background: none; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--hot); color: #fff; }
+  input[type=range] { width: 100%; accent-color: var(--hot); }
+  .toggle { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 12px 16px; margin-top: 18px; font-weight: 700; }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--hot); }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .err { background: #fde8e6; color: #9b2118; padding: 12px 14px; border-radius: 12px; margin-top: 14px; font-size: 15px; }
+  .banner { background: #fff1d6; color: #7a5200; padding: 8px 12px; border-radius: 10px; font-size: 13px; margin-top: 10px; }
+  .hidden { display: none !important; }
+
+  /* session header */
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .codepill { font-weight: 700; font-size: 14px; background: #fff; border: 2px solid var(--line); padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  .people { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .person { font-size: 13px; background: #fff; border: 1.5px solid var(--line); padding: 5px 10px; border-radius: 999px; }
+  .person b { color: var(--hot); }
+  .tabs { display: flex; gap: 6px; margin: 10px 0 12px; }
+  .tabs button { flex: 1; font: inherit; font-weight: 700; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--muted); cursor: pointer; }
+  .tabs button.on { color: var(--ink); border-color: var(--ink); }
+  .tabs .count { background: var(--hot); color: #fff; border-radius: 999px; padding: 1px 7px; font-size: 12px; margin-left: 4px; }
+
+  /* deck */
+  .deck { position: relative; flex: 1; min-height: 300px; }
+  .card {
+    position: absolute; inset: 0; border-radius: var(--r); overflow: hidden; background: var(--card);
+    box-shadow: 0 18px 40px -18px rgba(42, 26, 18, .45); touch-action: none; user-select: none;
+    display: flex; flex-direction: column; will-change: transform;
+  }
+  .card.back { transform: scale(.95) translateY(14px); filter: brightness(.97); }
+  .photo { flex: 1; position: relative; background-size: cover; background-position: center; min-height: 150px; }
+  @media (max-height: 700px) { .hero { margin: 20px 0 14px } .hero h1 { font-size: 36px } .round { width: 60px; height: 60px; font-size: 26px } .actions { margin-top: 12px } .photo .nm h2 { font-size: 25px } .tabs { margin: 8px 0 10px } .tabs button { padding: 8px } }
+  .photo .ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 96px;
+    background: linear-gradient(160deg, #ffb27a, #ff5a36 60%, #c7361b); }
+  .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,.55)); }
+  .photo .nm { position: absolute; left: 18px; right: 18px; bottom: 14px; z-index: 1; color: #fff; }
+  .photo .nm h2 { font-size: 30px; line-height: 1.05; font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
+  .photo .nm div { opacity: .92; font-size: 15px; margin-top: 4px; }
+  .meta { padding: 14px 18px 16px; display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 15px; }
+  .meta .open { color: var(--yes); font-weight: 700; }
+  .meta .closed { color: var(--no); font-weight: 700; }
+  .meta a { color: var(--muted); }
+  .stamp { position: absolute; top: 26px; z-index: 2; font-family: "Fraunces", serif; font-weight: 900; font-size: 34px;
+    padding: 4px 14px; border: 5px solid; border-radius: 12px; opacity: 0; letter-spacing: .04em; }
+  .stamp.yes { left: 20px; color: var(--yes); transform: rotate(-14deg); }
+  .stamp.no { right: 20px; color: var(--no); transform: rotate(14deg); }
+  .actions { display: flex; justify-content: center; gap: 28px; margin-top: 18px; }
+  .round { width: 72px; height: 72px; border-radius: 50%; border: 0; background: #fff; font-size: 30px; cursor: pointer;
+    box-shadow: 0 10px 24px -10px rgba(42,26,18,.5); display: grid; place-items: center; }
+  .round.no { color: var(--no); } .round.yes { color: var(--yes); }
+  .round:active { transform: scale(.92); }
+  .progress { text-align: center; color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
+  .empty h2 { color: var(--ink); font-size: 26px; margin-bottom: 8px; }
+
+  /* results */
+  .res { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .res .thumb { width: 64px; height: 64px; border-radius: 12px; background: linear-gradient(160deg, #ffb27a, #ff5a36) center/cover; flex: none; display: grid; place-items: center; font-size: 28px; }
+  .res .info { flex: 1; min-width: 0; }
+  .res .info b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .res .info span { color: var(--muted); font-size: 13px; }
+  .res a.go { font-weight: 700; color: var(--hot); text-decoration: none; font-size: 14px; white-space: nowrap; }
+  .res.match { border-color: var(--yes); }
+  .sect { font-family: "Fraunces", serif; font-weight: 700; font-size: 18px; margin: 18px 0 10px; }
+
+  /* match overlay */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(circle at 50% 40%, rgba(255,138,61,.96), rgba(199,54,27,.97)); color: #fff; text-align: center; }
+  .overlay h1 { font-size: 52px; font-weight: 900; line-height: .95; }
+  .overlay p { font-size: 19px; margin: 14px 0 26px; }
+  .overlay .btn { background: #fff; color: var(--hot); }
+  .overlay .btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+  .pop { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  .toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 60; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="brand"><img src="/icon.svg" alt="">Kulinary Decisions</div>
+    <div class="hero">
+      <h1>Swipe together.<br><em>Eat happy.</em></h1>
+      <p>Everyone swipes on the same restaurants. Dinner is decided the moment you all swipe right.</p>
+    </div>
+    <label class="f" for="name">Your name</label>
+    <input id="name" type="text" maxlength="24" placeholder="e.g. Nik" autocomplete="given-name">
+    <button class="btn" id="goHost">Start a dinner</button>
+    <div class="or">or join one</div>
+    <div class="row">
+      <input id="joinCode" type="text" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" style="text-transform:uppercase;letter-spacing:.2em;font-weight:700;text-align:center">
+      <button class="btn ghost" id="goJoin" style="margin-top:0;width:auto;padding:14px 22px">Join</button>
+    </div>
+    <div id="homeErr" class="err hidden"></div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="setup" class="hidden">
+    <div class="top"><div class="brand"><img src="/icon.svg" alt="">Kulinary Decisions</div><button class="codepill" data-back>Back</button></div>
+    <div id="mockBanner" class="banner hidden">Sample restaurants: no Google key is set up yet.</div>
+
+    <label class="f">Where</label>
+    <button class="btn ghost" id="useLoc" style="margin-top:0">📍 Use my location</button>
+    <input id="place" type="text" enterkeyhint="done" autocomplete="postal-code" placeholder="…or a city, neighborhood, or ZIP" style="margin-top:10px">
+    <div id="locHint" class="hint"></div>
+
+    <label class="f">Craving</label>
+    <div class="chips" id="cuisines"></div>
+
+    <label class="f">What kind of list</label>
+    <div class="seg" id="mode">
+      <button data-v="popular" class="on">Crowd favorites</button>
+      <button data-v="top">Top rated</button>
+      <button data-v="new">New &amp; buzzy</button>
+    </div>
+    <div class="hint" id="modeHint">Popular spots ranked by rating and review volume.</div>
+
+    <label class="f">Within <span id="radiusVal">5</span> miles</label>
+    <input type="range" id="radius" min="1" max="20" value="5">
+
+    <label class="f">Max price</label>
+    <div class="seg" id="price">
+      <button data-v="1">$</button><button data-v="2">$$</button><button data-v="3">$$$</button><button data-v="4" class="on">Any</button>
+    </div>
+
+    <label class="toggle">Open right now <input type="checkbox" id="openNow" checked></label>
+
+    <div id="passWrap" class="hidden">
+      <label class="f" for="pass">Family passcode</label>
+      <input id="pass" type="password" placeholder="Ask Nik">
+    </div>
+
+    <button class="btn" id="create">Find restaurants</button>
+    <div id="setupErr" class="err hidden"></div>
+  </section>
+
+  <!-- SESSION -->
+  <section id="session" class="hidden" style="flex:1;display:flex;flex-direction:column">
+    <div class="top">
+      <div class="brand"><img src="/icon.svg" alt="">Kulinary Decisions</div>
+      <button class="codepill" id="share">Invite · <span id="codeTxt"></span></button>
+    </div>
+    <div class="people" id="people"></div>
+    <div class="tabs">
+      <button id="tabSwipe" class="on">Swipe</button>
+      <button id="tabRes">Matches<span class="count hidden" id="mCount"></span></button>
+    </div>
+
+    <div id="swipeView" style="flex:1;display:flex;flex-direction:column">
+      <div class="deck" id="deck"></div>
+      <div class="actions" id="actions">
+        <button class="round no" id="btnNo" aria-label="Nope">✕</button>
+        <button class="round yes" id="btnYes" aria-label="Yes">♥</button>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <div id="resView" class="hidden"><div id="resList"></div><button class="btn ghost" id="newDinner" style="margin-top:8px">Start a new dinner</button></div>
+  </section>
+</div>
+
+<div id="overlay" class="overlay hidden"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const CUISINES = [
+  ["anything","🍽️ Anything"],["mexican","🌮 Mexican"],["indian","🍛 Indian"],["italian","🍝 Italian"],
+  ["pizza","🍕 Pizza"],["japanese","🍱 Japanese"],["sushi","🍣 Sushi"],["chinese","🥡 Chinese"],
+  ["thai","🌶️ Thai"],["vietnamese","🍜 Vietnamese"],["korean","🥘 Korean"],["mediterranean","🥙 Mediterranean"],
+  ["american","🍽️ American"],["burgers","🍔 Burgers"],["bbq","🍖 BBQ"],["seafood","🦐 Seafood"],
+  ["steak","🥩 Steak"],["vegetarian","🥗 Vegetarian"],
+];
+const EMOJI = { pizza:"🍕", sushi:"🍣", mexican:"🌮", taco:"🌮", indian:"🍛", thai:"🌶️", burger:"🍔", hamburger:"🍔",
+  vietnamese:"🍜", ramen:"🍜", noodle:"🍜", korean:"🥘", chinese:"🥡", italian:"🍝", barbecue:"🍖", bbq:"🍖",
+  seafood:"🦐", steak:"🥩", mediterranean:"🥙", vegetarian:"🥗", japanese:"🍱", cafe:"☕", bakery:"🥐" };
+const emojiFor = (p) => { const t = (p.type + " " + p.name).toLowerCase(); for (const k in EMOJI) if (t.includes(k)) return EMOJI[k]; return "🍽️"; };
+
+let me = store.get("kv_member");
+if (!me) { me = Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4); store.set("kv_member", me); }
+let config = { mock: false, needsPasscode: false };
+let state = null, code = null, pollTimer = null, seenMatches = new Set(), pending = new Set();
+const filters = { cuisine: "anything", mode: "popular", radiusMi: 5, maxPrice: 4, openNow: true, lat: null, lng: null, place: "" };
+
+// ---------- api ----------
+async function api(path, body) {
+  const r = await fetch("/api/" + path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const j = await r.json().catch(() => ({ error: "Network error" }));
+  if (!r.ok) throw new Error(j.error || "Something went wrong");
+  return j;
+}
+
+// ---------- screens ----------
+function show(id) { for (const s of ["home","setup","session"]) $("#" + s).classList.toggle("hidden", s !== id); }
+function err(el, msg) { el.textContent = msg; el.classList.toggle("hidden", !msg); }
+function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), 2200); }
+function needName() {
+  const n = $("#name").value.trim();
+  if (!n) { err($("#homeErr"), "Add your name so everyone knows who swiped."); $("#name").focus(); return null; }
+  store.set("kv_name", n); return n;
+}
+
+$("#name").value = store.get("kv_name") || "";
+$("#goHost").onclick = () => { if (needName()) { show("setup"); } };
+$("#goJoin").onclick = async () => {
+  const n = needName(); if (!n) return;
+  const c = $("#joinCode").value.trim().toUpperCase();
+  try { const s = await api("join", { code: c, member: me, name: n }); enterSession(s); }
+  catch (e) { err($("#homeErr"), e.message); }
+};
+document.querySelectorAll("[data-back]").forEach((b) => b.onclick = () => show("home"));
+
+// ---------- setup ----------
+$("#cuisines").innerHTML = CUISINES.map(([v, l]) => `<button class="chip${v === "anything" ? " on" : ""}" data-v="${v}">${l}</button>`).join("");
+$("#cuisines").onclick = (e) => { const b = e.target.closest(".chip"); if (!b) return;
+  document.querySelectorAll("#cuisines .chip").forEach((c) => c.classList.toggle("on", c === b)); filters.cuisine = b.dataset.v; };
+const MODE_HINT = { popular: "Popular spots ranked by rating and review volume.", top: "Only places rated 4.3★ or higher.",
+  new: "Google doesn't publish opening dates, so this favors highly rated places that don't have many reviews yet." };
+function seg(id, key, onChange) {
+  $(id).onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
+    $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    filters[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v; onChange && onChange(); };
+}
+seg("#mode", "mode", () => $("#modeHint").textContent = MODE_HINT[filters.mode]);
+seg("#price", "maxPrice");
+$("#radius").oninput = (e) => { filters.radiusMi = +e.target.value; $("#radiusVal").textContent = e.target.value; };
+$("#openNow").onchange = (e) => filters.openNow = e.target.checked;
+$("#place").oninput = (e) => { filters.place = e.target.value; if (e.target.value) { filters.lat = filters.lng = null; $("#locHint").textContent = ""; $("#useLoc").textContent = "📍 Use my location"; } };
+$("#useLoc").onclick = () => {
+  if (!navigator.geolocation) return $("#locHint").textContent = "Location isn't available here. Type a city or ZIP.";
+  $("#locHint").textContent = "Finding you…";
+  navigator.geolocation.getCurrentPosition(
+    (p) => { filters.lat = p.coords.latitude; filters.lng = p.coords.longitude; filters.place = ""; $("#place").value = "";
+      $("#useLoc").textContent = "📍 Using your location ✓"; $("#locHint").textContent = ""; },
+    () => { $("#locHint").textContent = "Couldn't get your location. Type a city or ZIP instead."; },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+};
+$("#create").onclick = async () => {
+  err($("#setupErr"), "");
+  if (filters.lat == null && !filters.place.trim()) return err($("#setupErr"), "Tap “Use my location” or type a city or ZIP.");
+  const btn = $("#create"); btn.disabled = true; btn.textContent = "Finding restaurants…";
+  try {
+    const s = await api("session", { member: me, name: store.get("kv_name"), passcode: $("#pass").value, filters });
+    if (config.needsPasscode) store.set("kv_pass", $("#pass").value);
+    enterSession(s);
+  } catch (e) { err($("#setupErr"), e.message); }
+  finally { btn.disabled = false; btn.textContent = "Find restaurants"; }
+};
+
+// ---------- session ----------
+function enterSession(s) {
+  code = s.code; state = s; seenMatches = new Set(s.matches); pending.clear();
+  history.replaceState(null, "", "?join=" + code);
+  $("#codeTxt").textContent = code;
+  show("session"); setTab("swipe"); render();
+  clearInterval(pollTimer); pollTimer = setInterval(poll, 2500);
+}
+async function poll() {
+  if (!code || document.hidden) return;
+  try { apply(await api(`session?code=${code}&member=${me}`)); } catch (e) { if (/expired|not found/i.test(e.message)) { clearInterval(pollTimer); toast(e.message); } }
+}
+function apply(s) {
+  state = s;
+  // keep optimistic local swipes until the server echoes them
+  for (const id of [...pending]) if (s.mySwipes[id] != null) pending.delete(id);
+  const fresh = s.matches.filter((id) => !seenMatches.has(id));
+  fresh.forEach((id) => seenMatches.add(id));
+  render(true);
+  if (fresh.length) celebrate(s.places.find((p) => p.id === fresh[0]));
+}
+const swiped = (id) => state.mySwipes[id] != null || pending.has(id);
+const placeById = (id) => state.places.find((p) => p.id === id);
+const photo = (p) => p.photo ? `/api/photo?name=${encodeURIComponent(p.photo)}` : null;
+const price = (n) => n ? "$".repeat(n) : "";
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function render(fromPoll) {
+  const others = state.people.length - 1;
+  $("#people").innerHTML = state.people.map((p) =>
+    `<span class="person">${esc(p.name)}${p.id === me ? " (you)" : ""} · <b>${p.done ? "done" : p.swiped + "/" + state.total}</b></span>`).join("")
+    + (others < 1 ? `<span class="person" style="border-style:dashed">Waiting for someone to join…</span>` : "");
+  $("#mCount").textContent = state.matches.length;
+  $("#mCount").classList.toggle("hidden", !state.matches.length);
+  if (!fromPoll || !$("#deck").querySelector(".card.front")) renderDeck();
+  renderResults();
+}
+
+function renderDeck() {
+  const left = state.places.filter((p) => !swiped(p.id));
+  const deck = $("#deck");
+  $("#progress").textContent = left.length ? `${state.total - left.length + 1} of ${state.total}` : "";
+  $("#actions").classList.toggle("hidden", !left.length);
+  if (!left.length) {
+    const waiting = state.people.filter((p) => !p.done && p.id !== me).map((p) => p.name);
+    deck.innerHTML = `<div class="empty"><h2>${state.matches.length ? "You've got matches! 🎉" : "That's the whole list"}</h2>
+      ${waiting.length ? `Waiting on ${esc(waiting.join(", "))} to finish swiping.` : state.people.length < 2 ? "Invite someone with the button up top." : state.matches.length ? "" : "No place got everyone's vote. Check “Matches” for the closest calls."}
+      <button class="btn" style="margin-top:22px" onclick="setTab('res')">See matches</button></div>`;
+    return;
+  }
+  deck.innerHTML = left.slice(0, 2).reverse().map((p, i, arr) => cardHTML(p, i === arr.length - 1)).join("");
+  left.slice(2, 4).forEach((p) => { const u = photo(p); if (u) new Image().src = u; }); // preload upcoming photos
+  const front = deck.querySelector(".card.front");
+  if (front) drag(front);
+}
+
+function cardHTML(p, front) {
+  const img = photo(p);
+  return `<div class="card ${front ? "front" : "back"}" data-id="${esc(p.id)}">
+    <div class="stamp yes">YUM</div><div class="stamp no">NOPE</div>
+    <div class="photo" ${img ? `style="background-image:url('${img}')"` : ""}>
+      ${img ? "" : `<div class="ph">${emojiFor(p)}</div>`}
+      <div class="nm"><h2>${esc(p.name)}</h2><div>${esc(p.type)}${p.price ? " · " + price(p.price) : ""}</div></div>
+    </div>
+    <div class="meta">
+      ${p.rating ? `<span>⭐ <b>${p.rating}</b> (${p.reviews.toLocaleString()})</span>` : ""}
+      ${p.distance != null ? `<span>📍 ${p.distance} mi</span>` : ""}
+      ${p.openNow === true ? `<span class="open">Open now</span>` : p.openNow === false ? `<span class="closed">Closed now</span>` : ""}
+      ${p.mapsUrl ? `<a href="${esc(p.mapsUrl)}" target="_blank" rel="noopener">Menu, photos &amp; reviews ↗</a>` : ""}
+    </div></div>`;
+}
+
+function drag(card) {
+  let x0 = 0, y0 = 0, dx = 0, dy = 0, t0 = 0, down = false;
+  const yes = card.querySelector(".stamp.yes"), no = card.querySelector(".stamp.no");
+  card.addEventListener("pointerdown", (e) => { if (e.target.closest("a")) return; down = true; x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); dx = dy = 0; card.setPointerCapture(e.pointerId); card.style.transition = "none"; });
+  card.addEventListener("pointermove", (e) => {
+    if (!down) return; dx = e.clientX - x0; dy = e.clientY - y0;
+    card.style.transform = `translate(${dx}px, ${dy * 0.4}px) rotate(${dx / 18}deg)`;
+    yes.style.opacity = Math.max(0, Math.min(1, dx / 80)); no.style.opacity = Math.max(0, Math.min(1, -dx / 80));
+  });
+  const end = () => {
+    if (!down) return; down = false;
+    const v = Math.abs(dx) / Math.max(1, performance.now() - t0); // px per ms
+    if (Math.abs(dx) > card.offsetWidth * 0.28 || (Math.abs(dx) > 40 && v > 0.6)) return fling(card, dx > 0);
+    card.style.transition = "transform .25s"; card.style.transform = ""; yes.style.opacity = no.style.opacity = 0; dx = dy = 0;
+  };
+  card.addEventListener("pointerup", end); card.addEventListener("pointercancel", end);
+}
+
+function fling(card, like) {
+  if (!card || card.dataset.gone) return; card.dataset.gone = 1;
+  const id = card.dataset.id;
+  card.querySelector(like ? ".stamp.yes" : ".stamp.no").style.opacity = 1;
+  card.style.transition = "transform .35s ease-in, opacity .35s";
+  card.style.transform = `translate(${like ? 600 : -600}px, 40px) rotate(${like ? 30 : -30}deg)`;
+  card.style.opacity = 0;
+  pending.add(id);
+  if (navigator.vibrate) try { navigator.vibrate(like ? 15 : 8); } catch {}
+  setTimeout(renderDeck, 260);
+  api("swipe", { code, member: me, placeId: id, like }).then(apply).catch((e) => { pending.delete(id); toast(e.message); renderDeck(); });
+}
+$("#btnYes").onclick = () => fling($("#deck .card.front"), true);
+$("#btnNo").onclick = () => fling($("#deck .card.front"), false);
+
+function renderResults() {
+  const n = state.people.length;
+  const matches = state.matches.map(placeById);
+  const close = state.tally.filter((t) => t.likes > 0 && !state.matches.includes(t.id))
+    .sort((a, b) => b.likes - a.likes).slice(0, 8).map((t) => ({ ...placeById(t.id), likes: t.likes }));
+  const row = (p, m) => {
+    const img = photo(p);
+    return `<div class="res ${m ? "match" : ""}"><div class="thumb" ${img ? `style="background-image:url('${img}')"` : ""}>${img ? "" : emojiFor(p)}</div>
+      <div class="info"><b>${esc(p.name)}</b><span>${p.rating ? "⭐ " + p.rating + " · " : ""}${price(p.price)}${p.distance != null ? " · " + p.distance + " mi" : ""}${p.likes ? " · " + p.likes + "/" + n + " liked" : ""}</span></div>
+      ${p.mapsUrl ? `<a class="go" href="${esc(p.mapsUrl)}" target="_blank" rel="noopener">Go ↗</a>` : ""}</div>`;
+  };
+  $("#resList").innerHTML =
+    `<div class="sect">Everyone said yes</div>` +
+    (matches.length ? matches.map((p) => row(p, true)).join("") : `<div class="hint" style="margin-bottom:8px">${n < 2 ? "Matches appear once a second person joins and swipes." : "No unanimous yes yet. Keep swiping."}</div>`) +
+    (close.length ? `<div class="sect">Closest calls</div>` + close.map((p) => row(p, false)).join("") : "");
+}
+
+function setTab(t) {
+  $("#tabSwipe").classList.toggle("on", t === "swipe"); $("#tabRes").classList.toggle("on", t === "res");
+  $("#swipeView").classList.toggle("hidden", t !== "swipe"); $("#resView").classList.toggle("hidden", t !== "res");
+}
+$("#tabSwipe").onclick = () => setTab("swipe");
+$("#tabRes").onclick = () => setTab("res");
+
+function celebrate(p) {
+  if (!p) return;
+  const o = $("#overlay");
+  o.innerHTML = `<div class="pop"><div style="font-size:72px">${emojiFor(p)}</div><h1>It's a<br>match!</h1>
+    <p>Everyone wants <b>${esc(p.name)}</b></p>
+    ${p.mapsUrl ? `<a class="btn" href="${esc(p.mapsUrl)}" target="_blank" rel="noopener" style="text-decoration:none">Let's go ↗</a>` : ""}
+    <button class="btn ghost" id="keep">Keep swiping</button></div>`;
+  o.classList.remove("hidden");
+  $("#keep").onclick = () => o.classList.add("hidden");
+}
+
+$("#share").onclick = async () => {
+  const url = location.origin + "/?join=" + code;
+  const text = `Help pick dinner on Kulinary Decisions! Code ${code}`;
+  try { if (navigator.share) { await navigator.share({ title: "Kulinary Decisions", text, url }); return; } } catch (e) { if (e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(`${text}: ${url}`); toast("Invite link copied"); } catch { toast("Code: " + code); }
+};
+$("#newDinner").onclick = () => { clearInterval(pollTimer); code = null; history.replaceState(null, "", "/"); show(store.get("kv_name") ? "setup" : "home"); };
+
+document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
+$("#joinCode").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#goJoin").click(); });
+
+// ---------- boot ----------
+(async () => {
+  try { config = await api("config"); } catch {}
+  $("#mockBanner").classList.toggle("hidden", !config.mock);
+  $("#passWrap").classList.toggle("hidden", !config.needsPasscode);
+  $("#pass").value = store.get("kv_pass") || "";
+  const j = new URLSearchParams(location.search).get("join");
+  if (j) {
+    $("#joinCode").value = j.toUpperCase();
+    if (store.get("kv_name")) $("#goJoin").click();
+  }
+})();
+</script>
+</body>
+</html>

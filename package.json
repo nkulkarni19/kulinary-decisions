@@ -1,0 +1,10 @@
+{
+  "name": "kulinary-decisions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Swipe on restaurants together. Dinner is decided when everyone swipes right.",
+  "scripts": {
+    "dev": "node scripts/dev-server.js"
+  },
+  "engines": { "node": ">=18" }
+}
